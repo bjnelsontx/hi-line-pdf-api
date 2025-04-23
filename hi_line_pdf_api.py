@@ -35,7 +35,7 @@ def generate_statements():
         for name in os.listdir(tmpdir):
             if name.lower().endswith('.xlsx'):
                 excel_file = os.path.join(tmpdir, name)
-            if name.lower().endswith('.jpg') or name.lower().endswith('.jpeg'):
+            if name.lower().endswith('.jpg') or name.lower().endswith('.jpeg') or name.lower().endswith('.png'):
                 logo_file = os.path.join(tmpdir, name)
 
         if not excel_file or not logo_file:
