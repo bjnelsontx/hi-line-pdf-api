@@ -1,45 +1,58 @@
+
+from flask import Flask, request, send_file
+import pandas as pd
+import io
 import os
 import zipfile
-import tempfile
-from flask import Flask, request, send_file, jsonify
-from werkzeug.utils import secure_filename
+from zipfile import ZipFile
+from reportlab.pdfgen import canvas
+from reportlab.platypus import Table, TableStyle
+from reportlab.lib.pagesizes import LETTER
+from reportlab.lib import colors
+from reportlab.lib.units import inch
+from datetime import datetime
+from tempfile import TemporaryDirectory
 
 app = Flask(__name__)
 
 @app.route('/generate', methods=['POST'])
 def generate_statements():
-    if 'file' not in request.files:
-        return jsonify({"error": "No file part in request"}), 400
+    if 'input_zip' not in request.files:
+        return "Missing file: Please upload a zip file containing 'excel' and 'logo' files.", 400
 
-    file = request.files['file']
-    if file.filename == '':
-        return jsonify({"error": "No selected file"}), 400
+    input_zip = request.files['input_zip']
 
-    if not file.filename.endswith('.zip'):
-        return jsonify({"error": "Invalid file format. Only .zip accepted."}), 400
-
-    with tempfile.TemporaryDirectory() as tmpdir:
-        zip_path = os.path.join(tmpdir, secure_filename(file.filename))
-        file.save(zip_path)
+    with TemporaryDirectory() as tmpdir:
+        zip_path = os.path.join(tmpdir, "input.zip")
+        input_zip.save(zip_path)
 
         with zipfile.ZipFile(zip_path, 'r') as zip_ref:
             zip_ref.extractall(tmpdir)
 
         excel_file = None
         logo_file = None
+        discovered_files = []
 
-        for f in os.listdir(tmpdir):
-            if f.endswith('.xlsx') or f.endswith('.xls'):
-                excel_file = os.path.join(tmpdir, f)
-            elif f.lower().endswith(('.png', '.jpg', '.jpeg')):
-                logo_file = os.path.join(tmpdir, f)
+        for root, _, files in os.walk(tmpdir):
+            for name in files:
+                path = os.path.join(root, name)
+                discovered_files.append(path)
+                if name.lower().endswith('.xlsx') and not name.startswith('._'):
+                    excel_file = path
+                if name.lower().endswith(('.jpg', '.jpeg', '.png')) and not name.startswith('._'):
+                    logo_file = path
 
         if not excel_file or not logo_file:
-            missing_debug = f'Files in ZIP: {os.listdir(tmpdir)} | Excel: {excel_file} | Logo: {logo_file}'
-            raise Exception(f"Missing file: {missing_debug}")
+            log = "\n".join([
+                "FILES FOUND:",
+                *discovered_files,
+                "",
+                f"Excel File: {excel_file}",
+                f"Logo File: {logo_file}"
+            ])
+            return f"Missing file(s) required for PDF generation. DEBUG INFO:\n{log}", 400
 
-        # TODO: Replace the line below with actual statement generation logic
-        return jsonify({"message": "Successfully received and validated the ZIP file."})
+        return "✅ Files found. PDF generation would proceed here.", 200
 
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=8000)
+if __name__ == "__main__":
+    app.run(debug=True, host='0.0.0.0', port=5000)
