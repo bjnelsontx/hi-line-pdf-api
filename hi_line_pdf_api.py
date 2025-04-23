@@ -40,6 +40,8 @@ def generate_statements():
                     logo_file = os.path.join(root, name)
 
         if not excel_file or not logo_file:
+        missing_debug = f'Files in ZIP: {os.listdir(tmpdir)} | Excel: {excel_file} | Logo: {logo_file}'
+        return f"Missing file: Please upload a zip file containing 'excel' and 'logo' files.\\n{missing_debug}", 400
             return "ZIP must include an Excel (.xlsx) file and a JPG logo.", 400
 
         df = pd.ExcelFile(excel_file).parse('5 Data Only')
