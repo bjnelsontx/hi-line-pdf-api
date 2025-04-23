@@ -32,11 +32,12 @@ def generate_statements():
         excel_file = None
         logo_file = None
 
-        for name in os.listdir(tmpdir):
-            if name.lower().endswith('.xlsx'):
-                excel_file = os.path.join(tmpdir, name)
-            if name.lower().endswith('.jpg') or name.lower().endswith('.jpeg') or name.lower().endswith('.png'):
-                logo_file = os.path.join(tmpdir, name)
+        for root, _, files in os.walk(tmpdir):
+        for name in files:
+                        if name.lower().endswith('.xlsx') and not name.startswith('._'):
+                                excel_file = os.path.join(root, name)
+                        if name.lower().endswith(('.jpg', '.jpeg', '.png')) and not name.startswith('._'):
+                                logo_file = os.path.join(root, name)
 
         if not excel_file or not logo_file:
             return "ZIP must include an Excel (.xlsx) file and a JPG logo.", 400
