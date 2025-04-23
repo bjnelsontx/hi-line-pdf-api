@@ -26,8 +26,14 @@ def generate_statements():
         zip_path = os.path.join(tmpdir, "input.zip")
         input_zip.save(zip_path)
 
-        with zipfile.ZipFile(zip_path, 'r') as zip_ref:
-            zip_ref.extractall(tmpdir)
+        debug_log = [f"ZIP path: {zip_path}"]
+
+        try:
+            with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+                zip_ref.extractall(tmpdir)
+                debug_log.append("ZIP extracted successfully.")
+        except Exception as e:
+            return f"Failed to extract ZIP: {str(e)}", 400
 
         excel_file = None
         logo_file = None
@@ -43,14 +49,11 @@ def generate_statements():
                     logo_file = path
 
         if not excel_file or not logo_file:
-            log = "\n".join([
-                "FILES FOUND:",
-                *discovered_files,
-                "",
-                f"Excel File: {excel_file}",
-                f"Logo File: {logo_file}"
-            ])
-            return f"Missing file(s) required for PDF generation. DEBUG INFO:\n{log}", 400
+            debug_log.append("ZIP contents after extraction:")
+            debug_log.extend(discovered_files)
+            debug_log.append(f"Excel match: {excel_file}")
+            debug_log.append(f"Logo match: {logo_file}")
+            return "❌ Missing file(s):\n" + "\n".join(debug_log), 400
 
         return "✅ Files found. PDF generation would proceed here.", 200
 
