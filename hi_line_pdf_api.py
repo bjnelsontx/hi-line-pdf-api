@@ -33,11 +33,11 @@ def generate_statements():
         logo_file = None
 
         for root, _, files in os.walk(tmpdir):
-        for name in files:
-                        if name.lower().endswith('.xlsx') and not name.startswith('._'):
-                                excel_file = os.path.join(root, name)
-                        if name.lower().endswith(('.jpg', '.jpeg', '.png')) and not name.startswith('._'):
-                                logo_file = os.path.join(root, name)
+            for name in files:
+                if name.lower().endswith('.xlsx') and not name.startswith('._'):
+                    excel_file = os.path.join(root, name)
+                if name.lower().endswith(('.jpg', '.jpeg', '.png')) and not name.startswith('._'):
+                    logo_file = os.path.join(root, name)
 
         if not excel_file or not logo_file:
             return "ZIP must include an Excel (.xlsx) file and a JPG logo.", 400
@@ -149,8 +149,8 @@ def generate_statements():
                 c.save()
                 zipf.writestr(file_name, buffer.getvalue())
 
-    zip_buffer.seek(0)
-    return send_file(zip_buffer, mimetype='application/zip', as_attachment=True, download_name='Customer_Statements.zip')
+        zip_buffer.seek(0)
+        return send_file(zip_buffer, mimetype='application/zip', as_attachment=True, download_name='Customer_Statements.zip')
 
 if __name__ == "__main__":
     app.run(debug=True, host='0.0.0.0', port=5000)
